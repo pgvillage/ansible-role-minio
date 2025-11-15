@@ -1,0 +1,23 @@
+---
+galaxy_info:
+  author: S. Mannem
+  description: CTO
+  company: Nibble-IT
+  license: PostgreSQL
+
+  platforms:
+    - name: EL
+      versions:
+        - "7"
+    - name: Fedora
+      versions:
+        - "27"
+
+  galaxy_tags:
+    - system
+    - minio
+    - storage
+    - objectstorage
+    - s3
+
+dependencies: []
