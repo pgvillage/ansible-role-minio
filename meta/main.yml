@@ -1,7 +1,10 @@
 ---
 galaxy_info:
   author: S. Mannem
-  description: CTO
+  description: |
+    Minio is a tool to create a S3 bucket out of a filesystem.
+    Minio can do a whole lot more, but this is what Minio is to PgVillage.
+    This role installs and configures minio.
   company: Nibble-IT
   license: PostgreSQL
 
