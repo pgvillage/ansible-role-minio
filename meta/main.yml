@@ -1,5 +1,7 @@
 ---
 galaxy_info:
+  namespace: pgvillage
+  role_name: minio
   author: S. Mannem
   description: |
     Minio is a tool to create a S3 bucket out of a filesystem.
