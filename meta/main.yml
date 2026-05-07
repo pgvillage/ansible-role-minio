@@ -1,5 +1,7 @@
 ---
 galaxy_info:
+  namespace: pgvillage
+  role_name: minio
   author: S. Mannem
   description: |
     Minio is a tool to create a S3 bucket out of a filesystem.
@@ -7,6 +9,7 @@ galaxy_info:
     This role installs and configures minio.
   company: Nibble-IT
   license: PostgreSQL
+  min_ansible_version: "2.9"
 
   platforms:
     - name: EL

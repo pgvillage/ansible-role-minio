@@ -38,7 +38,7 @@ minio_secret_key: "AWSSECRET"
 __minio_endpoint_defaults:
   accessKey: "{{ minio_access_key }}"
   secretKey: "{{ minio_secret_key }}"
-  url: "https://{{ ansible_fqdn }}"
+  url: "https://{{ ansible_facts.fqdn }}"
   api: S3v4
   path: auto
 
@@ -71,7 +71,7 @@ minio_server_chain: "---- CHAIN ----"
 
 minio_cert_files:
   minio_chain:
-    path: "{{ minio_cert_folders.client.path }}/CA_{{ ansible_hostname }}.crt"
+    path: "{{ minio_cert_folders.client.path }}/CA_{{ ansible_facts.hostname }}.crt"
     body: "{{ minio_client_cert }}"
     owner: "{{ minio_user }}"
   server_cert:
