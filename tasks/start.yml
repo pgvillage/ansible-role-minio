@@ -6,6 +6,7 @@
     name: minio
     state: started
     enabled: true
+    daemon_reload: true
 
 - name: Check started
   ansible.builtin.uri:
