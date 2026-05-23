@@ -23,7 +23,6 @@
   ansible.builtin.package:
     name: "{{ item }}"
     state: "{{ minio_package_state }}"
-    disable_gpg_check: "true"
   with_items: "{{ minio_package_names }}"
 
 - name: Generate the Minio server envfile
