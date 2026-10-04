@@ -7,7 +7,6 @@ minio_package_names:
 
 # Minio binaries path
 minio_server_bin: "/usr/local/bin/minio"
-minio_bin: "/usr/local/bin/mcli"
 
 # Runtime user and group for the Minio server service
 minio_user: minio
