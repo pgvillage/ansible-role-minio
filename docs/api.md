@@ -97,7 +97,7 @@ minio_cert_folders:
 
 ### `minio_cert_files`
 
-A dict of certificate files. Each file is deployed with mode `0600` and each change restarts Minio. Each value has these keys:
+A dict of certificate files. Each file is deployed with mode `0600`. Changes notify the `Restart minio` handler; multiple notifications are combined into one restart per handler flush. The role flushes handlers before its startup check. Each value has these keys:
 
 | Key | Description |
 |-----|-------------|
