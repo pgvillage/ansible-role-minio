@@ -65,7 +65,7 @@ minio_server_configdir: "{{ getent_passwd['minio'][4] }}/.minio"
 
 # Whether certificates are managed (e.g. by chainsmith). When true, the role
 # asserts that `minio_client_cert`, `minio_server_cert`, `minio_server_key`
-# and `minio_server_chain` contain real (multi-line) certificate data.
+# and `minio_server_chain` contain multi-line values.
 minio_cert_managed: true
 # Deploy certs from the `body` strings in `minio_cert_files` (true), or copy
 # them from the `source` files in `minio_cert_files` (false)
