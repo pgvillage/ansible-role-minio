@@ -1,13 +1,14 @@
 ---
+# State of the Minio packages and the Minio group (`present` or `absent`)
 minio_package_state: present
 
+# Packages to install: the Minio server and the Minio client (mcli)
 minio_package_names:
   - minio
   - mcli
 
-# Minio binaries path
+# Path to the Minio server binary (used by the systemd unit and init.d script)
 minio_server_bin: "/usr/local/bin/minio"
-minio_bin: "/usr/local/bin/mcli"
 
 # Runtime user and group for the Minio server service
 minio_user: minio
@@ -16,25 +17,32 @@ minio_group: "{{ minio_user }}"
 # Path to the file containing the ENV variables for the Minio server
 minio_server_envfile: /etc/default/minio
 
-# Minio server listen address
+# Minio server listen address (`[host]:port`).
+# Ports below 1024 grant CAP_NET_BIND_SERVICE to the systemd service.
 minio_server_addr: ":9091"
 
-# Minio server data directories
+# Minio server data directories. Created by the role and used as MINIO_VOLUMES
+# when `minio_server_cluster_nodes` is empty.
 minio_server_datadirs:
   - "/var/lib/minio"
 
-# Minio server cluster node list.
+# Minio server cluster node list (e.g. `https://minio{1...4}/var/lib/minio`).
+# When set, it is used as MINIO_VOLUMES instead of `minio_server_datadirs`.
 minio_server_cluster_nodes: []
-# Additional environment variables to be set in minio server environment
+
+# Additional environment variables to be set in minio server environment.
+# Added verbatim to `minio_server_envfile`, e.g. "MINIO_BROWSER=off".
 minio_server_env_extra: ""
 
-# Additional Minio server CLI options
+# Additional Minio server CLI options (appended to MINIO_OPTS)
 minio_server_opts: ""
 
-# Minio access and secret keys
+# Minio access and secret keys. Set as MINIO_ROOT_USER / MINIO_ROOT_PASSWORD
+# for the server, and used by the client to connect. Override these!
 minio_access_key: "AWSKEY"
 minio_secret_key: "AWSSECRET"
 
+# Internal: default client endpoint config, merged with `minio_endpoint`
 __minio_endpoint_defaults:
   accessKey: "{{ minio_access_key }}"
   secretKey: "{{ minio_secret_key }}"
@@ -42,20 +50,36 @@ __minio_endpoint_defaults:
   api: S3v4
   path: auto
 
+# Overrides for the client endpoint config (keys: accessKey, secretKey, url,
+# api, path). Merged on top of `__minio_endpoint_defaults` and used for the
+# mcli `minio` alias and for the startup health check.
 minio_endpoint: {}
+
+# Buckets to create (with mcli) after Minio has started
 minio_buckets:
   - mybucket
 
+# Config directories of the Minio client and server (in the home dir of `minio_user`)
 minio_client_configdir: "{{ getent_passwd['minio'][4] }}/.mcli"
 minio_server_configdir: "{{ getent_passwd['minio'][4] }}/.minio"
 
+# Whether certificates are managed (e.g. by chainsmith). When true, the role
+# asserts that `minio_client_cert`, `minio_server_cert`, `minio_server_key`
+# and `minio_server_chain` contain multi-line values.
 minio_cert_managed: true
+# Deploy certs from the `body` strings in `minio_cert_files` (true), or copy
+# them from the `source` files in `minio_cert_files` (false)
 minio_cert_from_string: "{{ minio_cert_managed }}"
+# When copying certs from file: `source` is on the managed host (true) or on
+# the Ansible controller (false)
 minio_cert_remote: "{{ not minio_cert_from_string }}"
 
+# Pass `--insecure` to mcli (skip TLS certificate verification)
 minio_insecure: false
+# Options added to mcli commands (e.g. when creating buckets)
 minio_cli_options: "--ignore-existing {% if minio_insecure %} --insecure{% endif %}"
 
+# Directories to create for certificates (key: name, value: path and owner)
 minio_cert_folders:
   client:
     path: "{{ minio_client_configdir }}/certs/CAs/"
@@ -64,11 +88,17 @@ minio_cert_folders:
     path: "{{ minio_server_configdir }}/certs"
     owner: "{{ minio_user }}"
 
+# Certificate data (PEM) used when `minio_cert_from_string` is true:
+# CA chain trusted by the client, server certificate, server private key
+# and server CA chain
 minio_client_cert: "---- CERT ----"
 minio_server_cert: "---- CERT ----"
 minio_server_key: "---- KEY ----"
 minio_server_chain: "---- CHAIN ----"
 
+# Certificate files to deploy. Each entry has a destination `path`, an
+# `owner`, the `body` (used when `minio_cert_from_string` is true) and an
+# optional `source` file (used when `minio_cert_from_string` is false)
 minio_cert_files:
   minio_chain:
     path: "{{ minio_cert_folders.client.path }}/CA_{{ ansible_facts.hostname }}.crt"
