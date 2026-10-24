@@ -1,6 +1,6 @@
 ---
 - name: Restart minio
   ansible.builtin.service:
-    name: minio
+    name: "{{ minio_service_name }}"
     state: restarted
     daemon_reload: true
