@@ -1,13 +1,4 @@
 ---
-- name: Create the Minio data storage directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ minio_user }}"
-    group: "{{ minio_group }}"
-    mode: "0750"
-  with_items: "{{ minio_server_datadirs }}"
-
 - name: Install minio packages
   ansible.builtin.package:
     name: "{{ item }}"

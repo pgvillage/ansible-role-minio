@@ -10,7 +10,7 @@
     success_msg: "Client and server certs seem properly setup"
   when: minio_cert_managed
 
-- name: Create minio user and group
+- name: Create minio user, group and data directories
   ansible.builtin.include_tasks: user.yml
 - name: Get user info
   ansible.builtin.getent:
@@ -28,6 +28,10 @@
       ansible.builtin.include_tasks: start.yml
     - name: Configure minio client and create buckets
       ansible.builtin.include_tasks: config_client.yml
-- name: Remove minio (data directories are kept)
-  ansible.builtin.include_tasks: remove_minio.yml
+- name: Replace minio by rustfs
   when: minio_use_rustfs | bool
+  block:
+    - name: Remove minio (data directories are kept)
+      ansible.builtin.include_tasks: remove_minio.yml
+    - name: Install rustfs
+      ansible.builtin.include_tasks: rustfs_install.yml
