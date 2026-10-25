@@ -3,3 +3,11 @@
   ansible.builtin.package:
     name: "{{ minio_rustfs_package_names }}"
     state: present
+
+- name: Generate the RustFS server envfile
+  ansible.builtin.template:
+    src: rustfs.env.j2
+    dest: "{{ minio_rustfs_server_envfile }}"
+    owner: "root"
+    group: "{{ minio_group }}"
+    mode: "0640"
