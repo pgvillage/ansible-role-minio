@@ -29,7 +29,7 @@ Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.c
 
 > **Back up the data first.** RustFS reads the data Minio left in the data directories in place, but upstream still calls this MinIO compatibility a preview, and it is one-way: once RustFS has written to the directories, Minio may not read them again. Test the switch on a copy of the data before switching a production host.
 
-> **Work in progress:** for now, `minio_use_rustfs: true` removes Minio, installs the RustFS packages (`minio_rustfs_package_names`) generates the RustFS env file (`minio_rustfs_server_envfile`) and the systemd unit (`/etc/systemd/system/<minio_rustfs_service_name>.service`). RustFS needs systemd: the role fails on hosts with another service manager. Removing Minio stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Configuring and starting RustFS follows in later releases.
+> **Work in progress:** for now, `minio_use_rustfs: true` removes Minio, installs the RustFS packages (`minio_rustfs_package_names`), generates the RustFS env file (`minio_rustfs_server_envfile`) and the systemd unit (`/etc/systemd/system/<minio_rustfs_service_name>.service`), and deploys the certificates (`minio_cert_files` and `minio_rustfs_cert_files`). RustFS needs systemd: the role fails on hosts with another service manager. Removing Minio stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Configuring and starting RustFS follows in later releases.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -119,11 +119,7 @@ minio_cert_folders:
 
 ### `minio_cert_files`
 
-<<<<<<< HEAD
-A dict of certificate files. Each file is deployed with mode `0600`. Changes notify the `Restart minio` handler; multiple notifications are combined into one restart per handler flush. The role flushes handlers before its startup check. Each value has these keys:
-=======
-A dict of certificate files. Each file is deployed with mode `0600` and each change restarts Minio. Each value has these keys:
->>>>>>> e1dc090e0f764753995594430b129cfb086e63f6
+A dict of certificate files. Each file is deployed with mode `0600`. Changes notify the `Restart minio` handler (it restarts RustFS when `minio_use_rustfs` is true); multiple notifications are combined into one restart per handler flush. The role flushes handlers before its startup check. Each value has these keys:
 
 | Key | Description |
 |-----|-------------|
@@ -140,6 +136,15 @@ Defaults:
 | `server_cert` | `<server certs>/public.crt` | `minio_server_cert` | `/etc/pki/minio/server.crt` |
 | `server_key` | `<server certs>/private.key` | `minio_server_key` | `/etc/pki/minio/server.key` |
 | `server_chain` | `<server certs>/ca.pem` | `minio_server_chain` | `/etc/pki/minio/root.crt` |
+
+### `minio_rustfs_cert_files`
+
+With `minio_use_rustfs: true`, these files are deployed as well, in the same way as `minio_cert_files` (same keys). The directory `minio_rustfs_tls_path` is created like the `minio_cert_folders`.
+
+| Entry | Path | Body | Source |
+|-------|------|------|--------|
+| `rustfs_cert` | `<minio_rustfs_tls_path>/rustfs_cert.pem` | `minio_server_cert` | `/etc/pki/minio/server.crt` |
+| `rustfs_key` | `<minio_rustfs_tls_path>/rustfs_key.pem` | `minio_server_key` | `/etc/pki/minio/server.key` |
 
 ## Example
 

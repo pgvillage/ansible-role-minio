@@ -5,7 +5,7 @@
     owner: "{{ item.value.owner }}"
     path: "{{ item.value.path }}"
     mode: "0700"
-  loop: "{{ minio_cert_folders | dict2items }}"
+  loop: "{{ __minio_cert_folders | dict2items }}"
   loop_control:
     label: "{{ item.key }} -> {{ item.value.path }}"
 
@@ -15,7 +15,7 @@
     content: "{{ item.value.body }}"
     owner: "{{ item.value.owner | default('root') }}"
     mode: "0600"
-  loop: "{{ minio_cert_files | dict2items }}"
+  loop: "{{ __minio_cert_files | dict2items }}"
   loop_control:
     label: "{{ item.key }} -> {{ item.value.path }}"
   when: minio_cert_from_string
@@ -28,7 +28,7 @@
     owner: "{{ item.value.owner | default('root') }}"
     mode: "0600"
     remote_src: "{{ minio_cert_remote }}"
-  loop: "{{ minio_cert_files | dict2items }}"
+  loop: "{{ __minio_cert_files | dict2items }}"
   loop_control:
     label: "{{ item.value.source | default(item.key) }} -> {{ item.value.path }}"
   when:

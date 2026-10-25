@@ -35,3 +35,5 @@
       ansible.builtin.include_tasks: remove_minio.yml
     - name: Install rustfs
       ansible.builtin.include_tasks: rustfs_install.yml
+    - name: Deploy certificates for rustfs
+      ansible.builtin.include_tasks: certs.yml

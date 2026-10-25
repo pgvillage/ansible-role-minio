@@ -160,3 +160,28 @@ minio_cert_files:
     body: "{{ minio_server_chain }}"
     owner: "{{ minio_cert_folders.server.owner }}"
     source: "/etc/pki/minio/root.crt"
+
+# RustFS certificate files, deployed in addition to `minio_cert_files` when
+# `minio_use_rustfs` is true. Same keys as `minio_cert_files`.
+minio_rustfs_cert_files:
+  rustfs_cert:
+    path: "{{ minio_rustfs_tls_path }}/rustfs_cert.pem"
+    body: "{{ minio_server_cert }}"
+    owner: "{{ minio_user }}"
+    source: "/etc/pki/minio/server.crt"
+  rustfs_key:
+    path: "{{ minio_rustfs_tls_path }}/rustfs_key.pem"
+    body: "{{ minio_server_key }}"
+    owner: "{{ minio_user }}"
+    source: "/etc/pki/minio/server.key"
+
+# Internal: service, cert folders and cert files for Minio or RustFS
+__minio_service_name: >-
+  {{ minio_rustfs_service_name if minio_use_rustfs | bool
+     else minio_service_name }}
+__minio_cert_folders: >-
+  {{ minio_cert_folders | combine({'rustfs': {'path': minio_rustfs_tls_path,
+     'owner': minio_user}} if minio_use_rustfs | bool else {}) }}
+__minio_cert_files: >-
+  {{ minio_cert_files | combine(minio_rustfs_cert_files
+     if minio_use_rustfs | bool else {}) }}
