@@ -16,6 +16,7 @@
     owner: "root"
     group: "{{ minio_group }}"
     mode: "0640"
+  notify: Restart minio
 
 - name: Create the RustFS server systemd config
   ansible.builtin.template:
@@ -24,3 +25,4 @@
     owner: "root"
     group: "root"
     mode: "0644"
+  notify: Restart minio
