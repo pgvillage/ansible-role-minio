@@ -1,0 +1,30 @@
+---
+- name: Create rustfs client config dir
+  ansible.builtin.file:
+    dest: "{{ item }}"
+    state: directory
+    mode: "0700"
+    owner: "{{ minio_user }}"
+    group: "{{ minio_group }}"
+  loop:
+    - "{{ minio_rustfs_client_configdir | dirname }}"
+    - "{{ minio_rustfs_client_configdir }}"
+
+- name: Create rustfs client config file
+  ansible.builtin.template:
+    src: rc.config.toml.j2
+    dest: "{{ minio_rustfs_client_configdir }}/config.toml"
+    mode: "0600"
+    owner: "{{ minio_user }}"
+    group: "{{ minio_group }}"
+  vars:
+    endpoint: "{{ __minio_endpoint_defaults | combine(minio_endpoint) }}"
+
+- name: Create buckets with rc
+  become: true
+  become_user: "{{ minio_user }}"
+  ansible.builtin.command: "{{ minio_rustfs_client_bin }} mb 'minio/{{ item }}' {{ minio_rustfs_cli_options }}"
+  environment:
+    RC_CONFIG_DIR: "{{ minio_rustfs_client_configdir }}"
+  loop: "{{ minio_buckets }}"
+  changed_when: false

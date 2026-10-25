@@ -104,6 +104,18 @@ minio_server_configdir: "{{ getent_passwd[minio_user][4] }}/.minio"
 # `rustfs_key.pem`), set as RUSTFS_TLS_PATH
 minio_rustfs_tls_path: "{{ minio_server_configdir }}/certs"
 
+# Config directory of the RustFS client (rc), in the home dir of `minio_user`
+minio_rustfs_client_configdir: "{{ getent_passwd[minio_user][4] }}/.config/rc"
+# CA bundle (PEM) used by rc to verify the server certificate. Defaults to
+# the client CA chain deployed from `minio_client_cert` (`minio_chain` in
+# `minio_cert_files`); empty means the system CAs.
+minio_rustfs_client_ca_bundle: >-
+  {{ minio_cert_files.minio_chain.path if minio_cert_from_string | bool
+     else '' }}
+# Options added to rc commands (e.g. when creating buckets). With
+# `minio_insecure`, rc skips TLS verification through its alias config.
+minio_rustfs_cli_options: "--ignore-existing"
+
 # Whether certificates are managed (e.g. by chainsmith). When true, the role
 # asserts that `minio_client_cert`, `minio_server_cert`, `minio_server_key`
 # and `minio_server_chain` contain multi-line values.
