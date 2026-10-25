@@ -23,12 +23,30 @@ The role:
 | `minio_user` | `minio` | User that runs the Minio server service. |
 | `minio_group` | `{{ minio_user }}` | Group of the Minio server service. |
 
+## RustFS
+
+Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.com). The role then stops and removes Minio, **leaving the data directories untouched**, and installs and configures RustFS with the same user, data directories, listen and console addresses, credentials and certificates.
+
+> **Work in progress:** for now only these variables exist; the RustFS tasks follow in later releases.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `minio_use_rustfs` | `false` | Replace Minio by RustFS. |
+| `minio_rustfs_package_names` | `[rustfs, rc]` | Packages to install: the RustFS server and the RustFS client (rc). |
+| `minio_rustfs_server_bin` | `/usr/bin/rustfs` | Path to the RustFS server binary, used by the systemd unit. |
+| `minio_rustfs_client_bin` | `/usr/bin/rc` | Path to the RustFS client binary. |
+| `minio_rustfs_service_name` | `rustfs` | Name of the RustFS server service (systemd unit). |
+| `minio_rustfs_server_envfile` | `/etc/default/rustfs` | Path to the file containing the environment variables for the RustFS server. |
+| `minio_rustfs_env_extra` | `""` | Extra environment variables, added verbatim to the RustFS env file (e.g. `RUSTFS_REGION=eu-west-1`). |
+| `minio_rustfs_tls_path` | `<minio home>/.minio/certs` | Directory with the RustFS server certificate and key (`rustfs_cert.pem` and `rustfs_key.pem`), set as `RUSTFS_TLS_PATH`. |
+
 ## Server configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `minio_server_envfile` | `/etc/default/minio` | Path to the file containing the environment variables for the Minio server. |
 | `minio_server_addr` | `:9091` | Listen address (`[host]:port`). For ports below 1024, the systemd service gets `CAP_NET_BIND_SERVICE`. |
+| `minio_server_console_addr` | `:9001` | Console (web UI) listen address (`[host]:port`), passed as `--console-address`. Also used for the RustFS console. For ports below 1024, the systemd service gets `CAP_NET_BIND_SERVICE`. |
 | `minio_server_datadirs` | `[/var/lib/minio]` | Data directories. The role creates them, and uses them as `MINIO_VOLUMES` when `minio_server_cluster_nodes` is empty. |
 | `minio_server_cluster_nodes` | `[]` | Cluster node list (e.g. `https://minio{1...4}/var/lib/minio`). When set, used as `MINIO_VOLUMES` instead of `minio_server_datadirs`. |
 | `minio_server_env_extra` | `""` | Extra environment variables, added verbatim to the env file (e.g. `MINIO_BROWSER=off`). |
