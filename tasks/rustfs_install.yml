@@ -1,4 +1,9 @@
 ---
+- name: Check that the host runs systemd
+  ansible.builtin.assert:
+    that: ansible_facts.service_mgr == "systemd"
+    fail_msg: "RustFS needs systemd (minio_use_rustfs), this host uses {{ ansible_facts.service_mgr }}"
+
 - name: Install rustfs packages
   ansible.builtin.package:
     name: "{{ minio_rustfs_package_names }}"
@@ -11,3 +16,11 @@
     owner: "root"
     group: "{{ minio_group }}"
     mode: "0640"
+
+- name: Create the RustFS server systemd config
+  ansible.builtin.template:
+    src: rustfs.service.j2
+    dest: "/etc/systemd/system/{{ minio_rustfs_service_name }}.service"
+    owner: "root"
+    group: "root"
+    mode: "0644"
