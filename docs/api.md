@@ -18,6 +18,8 @@ The role:
 | `minio_package_state` | `present` | State of the Minio packages and the Minio group (`present` or `absent`). |
 | `minio_package_names` | `[minio, mcli]` | Packages to install: the Minio server and the Minio client (mcli). |
 | `minio_server_bin` | `/usr/local/bin/minio` | Path to the Minio server binary, used by the systemd unit and the init.d script. |
+| `minio_client_bin` | `/usr/local/bin/mcli` | Path to the Minio client binary, used to create buckets. |
+| `minio_service_name` | `minio` | Name of the Minio server service (systemd unit or init.d script). |
 | `minio_user` | `minio` | User that runs the Minio server service. |
 | `minio_group` | `{{ minio_user }}` | Group of the Minio server service. |
 

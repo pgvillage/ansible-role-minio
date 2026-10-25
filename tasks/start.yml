@@ -3,7 +3,7 @@
   ansible.builtin.meta: flush_handlers
 - name: Enable and start the Minio service
   ansible.builtin.service:
-    name: minio
+    name: "{{ minio_service_name }}"
     state: started
     enabled: true
     daemon_reload: true
