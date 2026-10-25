@@ -11,7 +11,7 @@
   when: minio_cert_managed
 
 - name: Create minio user, group and data directories
-  ansible.builtin.include_tasks: user.yml
+  ansible.builtin.include_tasks: create.yml
 - name: Get user info
   ansible.builtin.getent:
     database: passwd
