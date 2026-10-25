@@ -1,9 +1,9 @@
 ---
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
-- name: Enable and start the Minio service
+- name: Enable and start the Minio or RustFS service
   ansible.builtin.service:
-    name: "{{ minio_service_name }}"
+    name: "{{ __minio_service_name }}"
     state: started
     enabled: true
     daemon_reload: true
