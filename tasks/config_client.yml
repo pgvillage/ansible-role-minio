@@ -37,6 +37,6 @@
 - name: Create buckets
   become: true
   become_user: "{{ minio_user }}"
-  ansible.builtin.command: "{{ minio_client_bin }} mb'minio/{{ item }}' {{ minio_cli_options }}"
+  ansible.builtin.command: "{{ minio_client_bin }} mb 'minio/{{ item }}' {{ minio_cli_options }}"
   loop: "{{ minio_buckets }}"
   changed_when: false

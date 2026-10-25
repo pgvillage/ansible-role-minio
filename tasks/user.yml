@@ -1,0 +1,11 @@
+---
+- name: Create Minio group
+  ansible.builtin.group:
+    name: "{{ minio_group }}"
+    state: "{{ minio_package_state }}"
+
+- name: Create Minio user
+  ansible.builtin.user:
+    name: "{{ minio_user }}"
+    group: "{{ minio_group }}"
+    shell: "/bin/bash"
