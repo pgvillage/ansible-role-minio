@@ -27,7 +27,9 @@ The role:
 
 Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.com). The role then stops and removes Minio, **leaving the data directories untouched**, and installs and configures RustFS with the same user, data directories, listen and console addresses, credentials and certificates.
 
-> **Work in progress:** for now, `minio_use_rustfs: true` only removes Minio: it stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Installing and starting RustFS follows in later releases.
+> **Back up the data first.** RustFS reads the data Minio left in the data directories in place, but upstream still calls this MinIO compatibility a preview, and it is one-way: once RustFS has written to the directories, Minio may not read them again. Test the switch on a copy of the data before switching a production host.
+
+> **Work in progress:** for now, `minio_use_rustfs: true` removes Minio and installs the RustFS packages (`minio_rustfs_package_names`). Removing Minio stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Configuring and starting RustFS follows in later releases.
 
 | Variable | Default | Description |
 |----------|---------|-------------|

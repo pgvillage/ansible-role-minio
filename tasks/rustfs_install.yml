@@ -1,0 +1,5 @@
+---
+- name: Install rustfs packages
+  ansible.builtin.package:
+    name: "{{ minio_rustfs_package_names }}"
+    state: present
