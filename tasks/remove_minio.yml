@@ -1,0 +1,41 @@
+---
+# Retire Minio in favour of RustFS. The Minio user, data directories and
+# certificates are kept: RustFS takes them over.
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Stop and disable the Minio service
+  ansible.builtin.service:
+    name: "{{ minio_service_name }}"
+    state: stopped
+    enabled: false
+  when: >-
+    minio_service_name in ansible_facts.services or
+    (minio_service_name ~ '.service') in ansible_facts.services
+
+- name: Remove the Minio server systemd config and init.d script
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "/etc/systemd/system/{{ minio_service_name }}.service"
+    - "/etc/init.d/{{ minio_service_name }}"
+  register: minio_service_files
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when:
+    - minio_service_files is changed
+    - ansible_facts.service_mgr == "systemd"
+
+- name: Remove the Minio server envfile
+  ansible.builtin.file:
+    path: "{{ minio_server_envfile }}"
+    state: absent
+
+- name: Remove minio packages
+  ansible.builtin.package:
+    name: "{{ minio_package_names }}"
+    state: absent

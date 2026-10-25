@@ -15,11 +15,17 @@
     database: passwd
     key: "{{ minio_user }}"
     split: ":"
-- name: Install minio
-  ansible.builtin.include_tasks: install.yml
-- name: Deploy certificates for minio
-  ansible.builtin.include_tasks: certs.yml
-- name: Start minio
-  ansible.builtin.include_tasks: start.yml
-- name: Configure minio client and create buckets
-  ansible.builtin.include_tasks: config_client.yml
+- name: Install, configure and start minio
+  when: not minio_use_rustfs
+  block:
+    - name: Install minio
+      ansible.builtin.include_tasks: install.yml
+    - name: Deploy certificates for minio
+      ansible.builtin.include_tasks: certs.yml
+    - name: Start minio
+      ansible.builtin.include_tasks: start.yml
+    - name: Configure minio client and create buckets
+      ansible.builtin.include_tasks: config_client.yml
+- name: Remove minio (data directories are kept)
+  ansible.builtin.include_tasks: remove_minio.yml
+  when: minio_use_rustfs
