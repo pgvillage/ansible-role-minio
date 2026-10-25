@@ -1,0 +1,13 @@
+# {{ ansible_managed }}
+schema_version = 1
+
+[[aliases]]
+name = "minio"
+endpoint = {{ endpoint.url | to_json }}
+access_key = {{ endpoint.accessKey | to_json }}
+secret_key = {{ endpoint.secretKey | to_json }}
+bucket_lookup = {{ {'on': 'path', 'off': 'dns'}.get(endpoint.path, 'auto') | to_json }}
+insecure = {{ minio_insecure | bool | lower }}
+{% if minio_rustfs_client_ca_bundle %}
+ca_bundle = {{ minio_rustfs_client_ca_bundle | to_json }}
+{% endif %}

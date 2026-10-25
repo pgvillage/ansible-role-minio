@@ -11,6 +11,8 @@ The role:
 4. starts Minio and waits until the endpoint responds,
 5. configures the Minio client (`mcli`) and creates buckets.
 
+With `minio_use_rustfs: true` it replaces Minio by RustFS instead; see [RustFS](#rustfs).
+
 ## Installation
 
 | Variable | Default | Description |
@@ -29,18 +31,28 @@ Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.c
 
 > **Back up the data first.** RustFS reads the Minio data in place (unencrypted objects; this role does not configure encryption) and imports the bucket settings and users from `.minio.sys` into its own `.rustfs.sys`. The switch is one-way: Minio only reads `.minio.sys`, so it would not see buckets, users or policies created or changed under RustFS. See [MinIO on-disk format interoperability](https://github.com/rustfs/rustfs/blob/main/docs/architecture/minio-file-format-compat.md).
 
-> **Work in progress:** for now, `minio_use_rustfs: true` removes Minio, installs the RustFS packages (`minio_rustfs_package_names`), generates the RustFS env file (`minio_rustfs_server_envfile`) and the systemd unit (`/etc/systemd/system/<minio_rustfs_service_name>.service`), deploys the certificates (`minio_cert_files` and `minio_rustfs_cert_files`), and starts RustFS and waits until the endpoint responds (the same check as for Minio). RustFS needs systemd: the role fails on hosts with another service manager. Removing Minio stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Configuring the client and creating buckets with RustFS follows in a later release.
+With `minio_use_rustfs: true` the role:
+
+1. creates the user, group and data directories, as for Minio;
+2. stops and disables the Minio service, and removes its systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept;
+3. installs the RustFS packages and generates the RustFS env file and systemd unit. RustFS needs systemd: the role fails on hosts with another service manager;
+4. deploys the certificates: `minio_cert_files` plus `minio_rustfs_cert_files`;
+5. starts RustFS and waits until the endpoint responds (the same check as for Minio);
+6. configures the RustFS client (`rc`) with a `minio` alias and creates `minio_buckets` with it.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `minio_use_rustfs` | `false` | Replace Minio by RustFS. |
-| `minio_rustfs_package_names` | `[rustfs, rc]` | Packages to install: the RustFS server and the RustFS client (rc). |
+| `minio_rustfs_package_names` | `[rustfs, rc]` | Packages to install: the RustFS server and the RustFS client (rc). Upstream names the client package `rustfs-cli`. |
 | `minio_rustfs_server_bin` | `/usr/bin/rustfs` | Path to the RustFS server binary, used by the systemd unit. |
-| `minio_rustfs_client_bin` | `/usr/bin/rc` | Path to the RustFS client binary. |
+| `minio_rustfs_client_bin` | `/usr/bin/rc` | Path to the RustFS client binary, used to create buckets. |
 | `minio_rustfs_service_name` | `rustfs` | Name of the RustFS server service. The role writes `/etc/systemd/system/<name>.service`, which overrides the unit shipped in the package. It runs as `minio_user`. For ports below 1024 (`minio_server_addr`, `minio_server_console_addr`), it gets `CAP_NET_BIND_SERVICE`. |
 | `minio_rustfs_server_envfile` | `/etc/default/rustfs` | Path to the file containing the environment variables for the RustFS server. Sets `RUSTFS_VOLUMES` (like `MINIO_VOLUMES`), `RUSTFS_ADDRESS` (`minio_server_addr`), `RUSTFS_CONSOLE_ADDRESS` (`minio_server_console_addr`), `RUSTFS_TLS_PATH` (`minio_rustfs_tls_path`) and `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` (`minio_access_key` / `minio_secret_key`). `minio_server_opts` and `minio_server_env_extra` do not apply to RustFS: use `minio_rustfs_env_extra`. |
 | `minio_rustfs_env_extra` | `""` | Extra environment variables, added verbatim to the RustFS env file (e.g. `RUSTFS_REGION=eu-west-1`). |
 | `minio_rustfs_tls_path` | `<minio home>/.minio/certs` | Directory with the RustFS server certificate and key (`rustfs_cert.pem` and `rustfs_key.pem`), set as `RUSTFS_TLS_PATH`. |
+| `minio_rustfs_client_configdir` | `<minio home>/.config/rc` | Config directory of the RustFS client. The role writes `config.toml` with a `minio` alias from the same endpoint config as mcli (`minio_endpoint`): URL, keys, bucket lookup (`path`), and `insecure` from `minio_insecure`. |
+| `minio_rustfs_client_ca_bundle` | the `minio_chain` path when `minio_cert_from_string`, else `""` | CA bundle (PEM) rc uses to verify the server certificate. Empty means the system CAs. |
+| `minio_rustfs_cli_options` | `--ignore-existing` | Options added to rc commands, such as when creating buckets. |
 
 ## Server configuration
 
