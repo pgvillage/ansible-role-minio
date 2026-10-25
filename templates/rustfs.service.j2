@@ -1,0 +1,55 @@
+# {{ ansible_managed }}
+
+[Unit]
+Description=RustFS Object Storage Server
+Documentation=https://docs.rustfs.com
+Wants=network-online.target
+After=network-online.target
+AssertFileIsExecutable={{ minio_rustfs_server_bin }}
+
+[Service]
+Type=notify
+NotifyAccess=main
+
+WorkingDirectory={{ getent_passwd[minio_user][4] }}
+
+User={{ minio_user }}
+Group={{ minio_group }}
+
+EnvironmentFile={{ minio_rustfs_server_envfile }}
+ExecStart={{ minio_rustfs_server_bin }} server
+
+StandardOutput=journal
+StandardError=journal
+
+# Resource limits
+LimitNOFILE=1048576
+LimitNPROC=32768
+TasksMax=infinity
+
+Restart=always
+RestartSec=10s
+
+# Type=notify waits for READY=1, so the start timeout must cover RustFS initialization
+TimeoutStartSec=120s
+TimeoutStopSec=45s
+
+# Hardening, as in the upstream unit. ProtectHome is left out: the
+# certificates are in the home dir of {{ minio_user }}.
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+PrivateDevices=true
+ProtectClock=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+
+{% if (minio_server_addr.split(':')[-1] | int) < 1024 or (minio_server_console_addr.split(':')[-1] | int) < 1024 %}
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+{% endif %}
+
+[Install]
+WantedBy=multi-user.target

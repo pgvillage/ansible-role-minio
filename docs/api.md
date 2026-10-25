@@ -29,7 +29,7 @@ Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.c
 
 > **Back up the data first.** RustFS reads the data Minio left in the data directories in place, but upstream still calls this MinIO compatibility a preview, and it is one-way: once RustFS has written to the directories, Minio may not read them again. Test the switch on a copy of the data before switching a production host.
 
-> **Work in progress:** for now, `minio_use_rustfs: true` removes Minio, installs the RustFS packages (`minio_rustfs_package_names`) and generates the RustFS env file (`minio_rustfs_server_envfile`). Removing Minio stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Configuring and starting RustFS follows in later releases.
+> **Work in progress:** for now, `minio_use_rustfs: true` removes Minio, installs the RustFS packages (`minio_rustfs_package_names`) generates the RustFS env file (`minio_rustfs_server_envfile`) and the systemd unit (`/etc/systemd/system/<minio_rustfs_service_name>.service`). RustFS needs systemd: the role fails on hosts with another service manager. Removing Minio stops and disables the service, and removes the systemd unit or init.d script, the env file and the packages in `minio_package_names`. The Minio user, data directories, certificates and client config are kept. Configuring and starting RustFS follows in later releases.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -37,7 +37,7 @@ Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.c
 | `minio_rustfs_package_names` | `[rustfs, rc]` | Packages to install: the RustFS server and the RustFS client (rc). |
 | `minio_rustfs_server_bin` | `/usr/bin/rustfs` | Path to the RustFS server binary, used by the systemd unit. |
 | `minio_rustfs_client_bin` | `/usr/bin/rc` | Path to the RustFS client binary. |
-| `minio_rustfs_service_name` | `rustfs` | Name of the RustFS server service (systemd unit). |
+| `minio_rustfs_service_name` | `rustfs` | Name of the RustFS server service. The role writes `/etc/systemd/system/<name>.service`, which overrides the unit shipped in the package. It runs as `minio_user`. For ports below 1024 (`minio_server_addr`, `minio_server_console_addr`), it gets `CAP_NET_BIND_SERVICE`. |
 | `minio_rustfs_server_envfile` | `/etc/default/rustfs` | Path to the file containing the environment variables for the RustFS server. Sets `RUSTFS_VOLUMES` (like `MINIO_VOLUMES`), `RUSTFS_ADDRESS` (`minio_server_addr`), `RUSTFS_CONSOLE_ADDRESS` (`minio_server_console_addr`), `RUSTFS_TLS_PATH` (`minio_rustfs_tls_path`) and `RUSTFS_ACCESS_KEY` / `RUSTFS_SECRET_KEY` (`minio_access_key` / `minio_secret_key`). `minio_server_opts` and `minio_server_env_extra` do not apply to RustFS: use `minio_rustfs_env_extra`. |
 | `minio_rustfs_env_extra` | `""` | Extra environment variables, added verbatim to the RustFS env file (e.g. `RUSTFS_REGION=eu-west-1`). |
 | `minio_rustfs_tls_path` | `<minio home>/.minio/certs` | Directory with the RustFS server certificate and key (`rustfs_cert.pem` and `rustfs_key.pem`), set as `RUSTFS_TLS_PATH`. |
