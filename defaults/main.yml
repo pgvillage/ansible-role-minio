@@ -16,6 +16,25 @@ minio_client_bin: "/usr/local/bin/mcli"
 # Name of the Minio server service (systemd unit / init.d script)
 minio_service_name: minio
 
+# Replace Minio by RustFS. When true, the role stops and removes Minio (the
+# data directories are kept) and installs and configures RustFS with the same
+# user, data directories, addresses, credentials and certificates.
+minio_use_rustfs: false
+
+# RustFS packages to install: the RustFS server and the RustFS client (rc)
+minio_rustfs_package_names:
+  - rustfs
+  - rc
+
+# Path to the RustFS server binary (used by the systemd unit)
+minio_rustfs_server_bin: "/usr/bin/rustfs"
+
+# Path to the RustFS client binary
+minio_rustfs_client_bin: "/usr/bin/rc"
+
+# Name of the RustFS server service (systemd unit)
+minio_rustfs_service_name: rustfs
+
 # Runtime user and group for the Minio server service
 minio_user: minio
 minio_group: "{{ minio_user }}"
@@ -26,6 +45,10 @@ minio_server_envfile: /etc/default/minio
 # Minio server listen address (`[host]:port`).
 # Ports below 1024 grant CAP_NET_BIND_SERVICE to the systemd service.
 minio_server_addr: ":9091"
+
+# Minio server console (web UI) listen address (`[host]:port`).
+# Ports below 1024 grant CAP_NET_BIND_SERVICE to the systemd service.
+minio_server_console_addr: ":9001"
 
 # Minio server data directories. Created by the role and used as MINIO_VOLUMES
 # when `minio_server_cluster_nodes` is empty.
@@ -42,6 +65,14 @@ minio_server_env_extra: ""
 
 # Additional Minio server CLI options (appended to MINIO_OPTS)
 minio_server_opts: ""
+
+# Path to the file containing the ENV variables for the RustFS server
+minio_rustfs_server_envfile: /etc/default/rustfs
+
+# Additional environment variables to be set in the RustFS server environment.
+# Added verbatim to `minio_rustfs_server_envfile`,
+# e.g. "RUSTFS_REGION=eu-west-1".
+minio_rustfs_env_extra: ""
 
 # Minio access and secret keys. Set as MINIO_ROOT_USER / MINIO_ROOT_PASSWORD
 # for the server, and used by the client to connect. Override these!
@@ -68,6 +99,10 @@ minio_buckets:
 # Config directories of the Minio client and server (in the home dir of `minio_user`)
 minio_client_configdir: "{{ getent_passwd[minio_user][4] }}/.mcli"
 minio_server_configdir: "{{ getent_passwd[minio_user][4] }}/.minio"
+
+# Directory with the RustFS server certificate and key (`rustfs_cert.pem` and
+# `rustfs_key.pem`), set as RUSTFS_TLS_PATH
+minio_rustfs_tls_path: "{{ minio_server_configdir }}/certs"
 
 # Whether certificates are managed (e.g. by chainsmith). When true, the role
 # asserts that `minio_client_cert`, `minio_server_cert`, `minio_server_key`
