@@ -19,6 +19,8 @@ minio_service_name: minio
 # Replace Minio by RustFS. When true, the role stops and removes Minio (the
 # data directories are kept) and installs and configures RustFS with the same
 # user, data directories, addresses, credentials and certificates.
+# This is one-way: with false, the role fails on hosts where RustFS is or was
+# in use (its service, systemd unit, envfile or `.rustfs.sys` in a data dir).
 minio_use_rustfs: false
 
 # RustFS packages to install: the RustFS server and the RustFS client (rc)

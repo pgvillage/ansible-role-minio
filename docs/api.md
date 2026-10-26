@@ -30,6 +30,8 @@ With `minio_use_rustfs: true` it replaces Minio by RustFS instead; see [RustFS](
 Setting `minio_use_rustfs` to `true` replaces Minio by [RustFS](https://rustfs.com). The role then stops and removes Minio, **leaving the data directories untouched**, and installs and configures RustFS with the same user, data directories, listen and console addresses, credentials and certificates.
 
 > **Back up the data first.** RustFS reads the Minio data in place (unencrypted objects; this role does not configure encryption) and imports the bucket settings and users from `.minio.sys` into its own `.rustfs.sys`. The switch is one-way: Minio only reads `.minio.sys`, so it would not see buckets, users or policies created or changed under RustFS. See [MinIO on-disk format interoperability](https://github.com/rustfs/rustfs/blob/main/docs/architecture/minio-file-format-compat.md).
+>
+> To prevent an accidental rollback, the role fails when `minio_use_rustfs` is `false` on a host where RustFS is or was in use: a RustFS service, its systemd unit or env file, or a `.rustfs.sys` directory in one of `minio_server_datadirs`.
 
 With `minio_use_rustfs: true` the role:
 

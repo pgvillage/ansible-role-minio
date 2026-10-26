@@ -10,6 +10,10 @@
     success_msg: "Client and server certs seem properly setup"
   when: minio_cert_managed
 
+- name: Check that RustFS is not in use (no rollback from RustFS to Minio)
+  ansible.builtin.include_tasks: check_no_rustfs.yml
+  when: not minio_use_rustfs | bool
+
 - name: Create minio user, group and data directories
   ansible.builtin.include_tasks: create.yml
 - name: Get user info

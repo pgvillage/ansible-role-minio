@@ -1,0 +1,37 @@
+---
+# Switching from RustFS back to Minio is not supported: Minio only reads
+# `.minio.sys` and would miss everything created or changed under RustFS.
+# Fail before touching anything when RustFS is or was in use on this host.
+
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Look for RustFS files
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  loop: >-
+    {{ ['/etc/systemd/system/' ~ minio_rustfs_service_name ~ '.service',
+        minio_rustfs_server_envfile]
+       + minio_server_datadirs | map('regex_replace', '/+$', '')
+         | map('regex_replace', '$', '/.rustfs.sys') }}
+  register: minio_rustfs_files
+
+- name: Check that RustFS is not in use on this host
+  ansible.builtin.assert:
+    that:
+      - minio_rustfs_service_name not in minio_services
+      - (minio_rustfs_service_name ~ '.service') not in minio_services
+      - minio_rustfs_found | length == 0
+    fail_msg: >-
+      RustFS is or was in use on this host ({{ minio_rustfs_found | join(', ')
+      | default('service ' ~ minio_rustfs_service_name, true) }}) but
+      minio_use_rustfs is false. Switching back from RustFS to Minio is not
+      supported: Minio would not see buckets, users or policies created or
+      changed under RustFS. Keep minio_use_rustfs set to true, or move to the
+      pgvillage.rustfs role.
+    quiet: true
+  vars:
+    minio_services: "{{ ansible_facts.services | default({}) }}"
+    minio_rustfs_found: >-
+      {{ minio_rustfs_files.results | selectattr('stat.exists')
+         | map(attribute='item') | list }}
