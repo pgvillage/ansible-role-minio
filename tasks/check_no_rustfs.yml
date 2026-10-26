@@ -19,8 +19,7 @@
 - name: Check that RustFS is not in use on this host
   ansible.builtin.assert:
     that:
-      - minio_rustfs_service_name not in minio_services
-      - (minio_rustfs_service_name ~ '.service') not in minio_services
+      - not minio_rustfs_service_exists
       - minio_rustfs_found | length == 0
     fail_msg: >-
       RustFS is or was in use on this host ({{ minio_rustfs_found | join(', ')
@@ -31,7 +30,13 @@
       pgvillage.rustfs role.
     quiet: true
   vars:
-    minio_services: "{{ ansible_facts.services | default({}) }}"
+    # systemd also reports units that are referenced but not installed
+    minio_rustfs_service_exists: >-
+      {{ ansible_facts.services | default({}) | dict2items
+         | selectattr('key', 'in', [minio_rustfs_service_name,
+                                    minio_rustfs_service_name ~ '.service'])
+         | rejectattr('value.status', 'eq', 'not-found')
+         | list | length > 0 }}
     minio_rustfs_found: >-
       {{ minio_rustfs_files.results | selectattr('stat.exists')
          | map(attribute='item') | list }}
