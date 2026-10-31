@@ -26,7 +26,7 @@ minio_use_rustfs: false
 # RustFS packages to install: the RustFS server and the RustFS client (rc)
 minio_rustfs_package_names:
   - rustfs
-  - rc
+  - rustfs-cli
 
 # Path to the RustFS server binary (used by the systemd unit)
 minio_rustfs_server_bin: "/usr/bin/rustfs"

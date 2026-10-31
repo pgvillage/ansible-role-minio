@@ -45,7 +45,7 @@ With `minio_use_rustfs: true` the role:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `minio_use_rustfs` | `false` | Replace Minio by RustFS. |
-| `minio_rustfs_package_names` | `[rustfs, rc]` | Packages to install: the RustFS server and the RustFS client (rc). Upstream names the client package `rustfs-cli`. |
+| `minio_rustfs_package_names` | `[rustfs, rustfs-cli]` | Packages to install: the RustFS server and the RustFS client (`rc`, in package `rustfs-cli`). Not `rc`: on hosts with EPEL, that name installs the Plan 9 rc shell as `/usr/bin/rc`. |
 | `minio_rustfs_server_bin` | `/usr/bin/rustfs` | Path to the RustFS server binary, used by the systemd unit. |
 | `minio_rustfs_client_bin` | `/usr/bin/rc` | Path to the RustFS client binary, used to create buckets. |
 | `minio_rustfs_service_name` | `rustfs` | Name of the RustFS server service. The role writes `/etc/systemd/system/<name>.service`, which overrides the unit shipped in the package. It runs as `minio_user`. For ports below 1024 (`minio_server_addr`, `minio_server_console_addr`), it gets `CAP_NET_BIND_SERVICE`. |

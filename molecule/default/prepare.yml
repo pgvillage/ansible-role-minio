@@ -1,0 +1,39 @@
+---
+- name: Prepare
+  hosts: all
+  vars:
+    pgvillage_repo: https://repo.pgvillage.org/yum/v0.3.8
+    cert_dir: /etc/pki/minio
+  tasks:
+    - name: Install openssl
+      ansible.builtin.dnf:
+        name: openssl
+        state: present
+
+    - name: Add the pgvillage package repo, so the role installs rustfs and rc by name
+      ansible.builtin.yum_repository:
+        name: pgvillage
+        description: pgvillage packages
+        baseurl: "{{ pgvillage_repo }}/el$releasever/$basearch/"
+        gpgcheck: true
+        gpgkey: https://repo.pgvillage.org/yum/pgvillage.asc
+
+    - name: Create the certificate directory
+      ansible.builtin.file:
+        path: "{{ cert_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Create a test CA and a server certificate for the host's fqdn
+      ansible.builtin.shell: |
+        set -e
+        openssl req -x509 -newkey rsa:2048 -nodes -days 30 -subj /CN=molecule-ca \
+          -keyout ca.key -out root.crt
+        openssl req -newkey rsa:2048 -nodes -subj "/CN={{ ansible_facts.fqdn }}" \
+          -keyout server.key -out server.csr
+        echo "subjectAltName=DNS:{{ ansible_facts.fqdn }},DNS:localhost,IP:127.0.0.1" > server.ext
+        openssl x509 -req -in server.csr -CA root.crt -CAkey ca.key -CAcreateserial \
+          -days 30 -extfile server.ext -out server.crt
+      args:
+        chdir: "{{ cert_dir }}"
+        creates: "{{ cert_dir }}/server.crt"
