@@ -1,0 +1,66 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Read the service states
+      ansible.builtin.service_facts:
+
+    - name: Check that RustFS runs and is enabled, and that there is no Minio service
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services['rustfs.service'].state == 'running'
+          - ansible_facts.services['rustfs.service'].status == 'enabled'
+          - "'minio.service' not in ansible_facts.services"
+
+    - name: Check that the S3 API serves TLS on 443 with the test certificate
+      ansible.builtin.uri:
+        url: "https://{{ ansible_facts.fqdn }}/"
+        ca_path: /etc/pki/minio/root.crt
+        status_code: [200, 403]
+
+    - name: Check that the console listens
+      ansible.builtin.wait_for:
+        port: 9001
+        timeout: 10
+
+    - name: Read the RustFS envfile
+      ansible.builtin.slurp:
+        src: /etc/default/rustfs
+      register: envfile
+
+    - name: Check that RustFS uses the Minio data directory and listen address
+      ansible.builtin.assert:
+        that:
+          - "'RUSTFS_VOLUMES=\"/var/lib/minio\"' in content"
+          - "'RUSTFS_ADDRESS=\":443\"' in content"
+      vars:
+        content: "{{ envfile.content | b64decode }}"
+
+    - name: Check that RustFS keeps its data in the Minio data directory
+      ansible.builtin.stat:
+        path: /var/lib/minio/.rustfs.sys
+      register: rustfs_sys
+      failed_when: not rustfs_sys.stat.isdir | default(false)
+
+    - name: Get the home directory of the minio user
+      ansible.builtin.getent:
+        database: passwd
+        key: minio
+
+    - name: List the buckets with rc, over TLS, as the minio user
+      become: true
+      become_user: minio
+      ansible.builtin.command: /usr/bin/rc ls minio --json
+      environment:
+        RC_CONFIG_DIR: "{{ getent_passwd.minio[4] }}/.config/rc"
+      register: buckets
+      changed_when: false
+
+    - name: Check that the buckets were created
+      ansible.builtin.assert:
+        that:
+          - "'cluster1' in bucket_names"
+          - "'cluster2' in bucket_names"
+        fail_msg: "buckets: {{ bucket_names }}"
+      vars:
+        bucket_names: "{{ (buckets.stdout | from_json)['items'] | map(attribute='key') | list }}"

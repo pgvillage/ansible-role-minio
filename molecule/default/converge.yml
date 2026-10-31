@@ -1,0 +1,31 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    minio_use_rustfs: true
+    # As in pgvillage (inventories/standard)
+    minio_server_addr: ":443"
+    minio_buckets:
+      - cluster1
+      - cluster2
+  pre_tasks:
+    # Certificates are passed as strings, as chainsmith does
+    - name: Read the test certificates made in prepare
+      ansible.builtin.slurp:
+        src: "/etc/pki/minio/{{ item }}"
+      loop: [root.crt, server.crt, server.key]
+      register: test_certs
+
+    - name: Pass the test certificates to the role
+      ansible.builtin.set_fact:
+        minio_client_cert: "{{ certs['root.crt'] }}"
+        minio_server_cert: "{{ certs['server.crt'] }}"
+        minio_server_key: "{{ certs['server.key'] }}"
+        minio_server_chain: "{{ certs['root.crt'] }}"
+      vars:
+        certs: >-
+          {{ dict(test_certs.results | map(attribute='item')
+                  | zip(test_certs.results | map(attribute='content')
+                        | map('b64decode'))) }}
+  roles:
+    - role: pgvillage.minio
